@@ -1,0 +1,7 @@
+node_modules
+.env
+.env.local
+logs
+tmp
+output
+.DS_Store
