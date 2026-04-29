@@ -2,10 +2,20 @@ const { Router } = require('express');
 const supabase = require('../config/supabase');
 const llm = require('../services/llm');
 const whatsapp = require('../services/whatsapp');
+const { isValidBrazilianPhone } = require('../utils/phone');
 const logger = require('../utils/logger');
 
 const router = Router();
 const EMPTY_XML = '<Response></Response>';
+
+function logSupabaseError(msg, err) {
+  logger.error(msg, {
+    message: err.message,
+    code: err.code,
+    details: err.details,
+    hint: err.hint,
+  });
+}
 
 router.post('/webhook-whatsapp', async (req, res) => {
   res.set('Content-Type', 'text/xml');
@@ -14,6 +24,12 @@ router.post('/webhook-whatsapp', async (req, res) => {
     const { From, Body, ProfileName, MessageSid } = req.body;
     const phoneE164 = whatsapp.fromWhatsApp(From || '');
     const textBody = (Body || '').trim();
+
+    // [fix-1] Validate Brazilian phone before touching the database
+    if (!phoneE164 || !isValidBrazilianPhone(phoneE164)) {
+      logger.warn('Invalid WhatsApp From number', { From, phoneE164 });
+      return res.status(200).send(EMPTY_XML);
+    }
 
     // Idempotency: skip already-processed messages
     if (MessageSid) {
@@ -44,7 +60,7 @@ router.post('/webhook-whatsapp', async (req, res) => {
         .single();
 
       if (profileErr) {
-        logger.error('Failed to create profile from webhook', profileErr);
+        logSupabaseError('Failed to create profile from webhook', profileErr);
         return res.status(200).send(EMPTY_XML);
       }
       profile = created;
@@ -68,7 +84,7 @@ router.post('/webhook-whatsapp', async (req, res) => {
         .single();
 
       if (convErr) {
-        logger.error('Failed to create conversation', convErr);
+        logSupabaseError('Failed to create conversation', convErr);
         return res.status(200).send(EMPTY_XML);
       }
       conversation = created;
@@ -98,6 +114,12 @@ router.post('/webhook-whatsapp', async (req, res) => {
         logger.error('Failed to send empty-body reply', err);
       }
 
+      // [fix-4] Update last_message_at even for empty-body messages
+      await supabase
+        .from('conversations')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', conversation.id);
+
       return res.status(200).send(EMPTY_XML);
     }
 
@@ -116,24 +138,26 @@ router.post('/webhook-whatsapp', async (req, res) => {
     });
 
     if (inboundErr) {
-      logger.error('Failed to save inbound message', inboundErr);
+      logSupabaseError('Failed to save inbound message', inboundErr);
       return res.status(200).send(EMPTY_XML);
     }
 
-    // Fetch last 10 messages for context
+    // [fix-2] Fetch the last 10 messages in reverse then re-order chronologically
     const { data: history } = await supabase
       .from('messages')
       .select('role, text_body')
       .eq('conversation_id', conversation.id)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(10);
+
+    const orderedHistory = (history || []).reverse();
 
     // Generate AI response
     const aiText = await llm.generatePastoralResponse(textBody, {
       userName: profile.full_name || profile.whatsapp_name || 'amigo',
       denomination: profile.denomination,
       heartContext: profile.heart_context,
-      conversationHistory: history || [],
+      conversationHistory: orderedHistory,
     });
 
     // Save outbound message as pending
@@ -153,17 +177,29 @@ router.post('/webhook-whatsapp', async (req, res) => {
       .single();
 
     if (outboundErr) {
-      logger.error('Failed to save outbound message', outboundErr);
+      logSupabaseError('Failed to save outbound message', outboundErr);
       return res.status(200).send(EMPTY_XML);
     }
 
-    // Send via WhatsApp and update status
+    // [fix-3] Send via WhatsApp — guard against null/missing SID
     try {
       const sent = await whatsapp.sendText(phoneE164, aiText);
-      await supabase
-        .from('messages')
-        .update({ provider_message_sid: sent.sid, provider_status: 'sent' })
-        .eq('id', outboundMsg.id);
+
+      if (!sent || !sent.sid) {
+        logger.error('Failed to send WhatsApp message', {
+          message: 'Twilio sendText returned no SID',
+          phoneE164,
+        });
+        await supabase
+          .from('messages')
+          .update({ provider_status: 'failed', error_message: 'Twilio sendText returned no SID' })
+          .eq('id', outboundMsg.id);
+      } else {
+        await supabase
+          .from('messages')
+          .update({ provider_message_sid: sent.sid, provider_status: 'sent' })
+          .eq('id', outboundMsg.id);
+      }
     } catch (sendErr) {
       logger.error('Failed to send WhatsApp message', sendErr);
       await supabase
