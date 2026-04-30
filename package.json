@@ -4,7 +4,7 @@
   "description": "Plataforma de acompanhamento espiritual via WhatsApp",
   "main": "src/server.js",
   "engines": {
-    "node": ">=18"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node src/server.js",
