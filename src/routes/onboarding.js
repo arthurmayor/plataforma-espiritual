@@ -1,11 +1,26 @@
 const { Router } = require('express');
+const fs = require('fs');
 const supabase = require('../config/supabase');
 const { uploadFile, getPublicUrl } = require('../config/supabase');
 const whatsapp = require('../services/whatsapp');
 const { generateFirstMessage, formatTextForAudio } = require('../services/llm');
 const { generateSpeech } = require('../services/tts');
+const { mixVoiceWithMusic } = require('../services/audio-mixer');
 const { normalizePhone, isValidBrazilianPhone } = require('../utils/phone');
 const logger = require('../utils/logger');
+
+const BACKGROUND_MUSIC_URL = 'https://dapxhktnsszbqhxyqmde.supabase.co/storage/v1/object/public/audios/music/background.mp3';
+const BACKGROUND_MUSIC_PATH = '/tmp/background-music.mp3';
+
+async function ensureBackgroundMusic() {
+  if (fs.existsSync(BACKGROUND_MUSIC_PATH)) return;
+  logger.info('audio-mixer: downloading background music');
+  const res = await fetch(BACKGROUND_MUSIC_URL);
+  if (!res.ok) throw new Error(`Failed to download background music: ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(BACKGROUND_MUSIC_PATH, buf);
+  logger.info('audio-mixer: background music cached', { bytes: buf.length });
+}
 
 const router = Router();
 
@@ -170,25 +185,35 @@ router.post('/onboarding', async (req, res) => {
 
         // d) generate MP3
         logger.info('TTS: calling generateSpeech', { textLength: audioText.length });
-        const audioBuffer = await generateSpeech(audioText);
+        let audioBuffer = await generateSpeech(audioText);
         logger.info('TTS: speech generated', { bufferSize: audioBuffer?.length });
 
-        // e) upload to Supabase Storage
+        // e) mix voice with background music (best-effort — falls back to voice-only)
+        try {
+          await ensureBackgroundMusic();
+          logger.info('audio-mixer: mixing voice with background music');
+          audioBuffer = await mixVoiceWithMusic(audioBuffer, BACKGROUND_MUSIC_PATH);
+          logger.info('audio-mixer: mix done', { bufferSize: audioBuffer.length });
+        } catch (mixErr) {
+          logger.warn('audio-mixer: mix failed, using voice-only audio', { error: mixErr.message });
+        }
+
+        // f) upload to Supabase Storage
         const storagePath = `first-messages/${deliveryId}.mp3`;
         logger.info('TTS: uploading to Supabase Storage');
         await uploadFile('audios', storagePath, audioBuffer, 'audio/mpeg');
 
-        // f) public URL
+        // g) public URL
         logger.info('TTS: uploaded, getting public URL');
         const audioUrl = getPublicUrl('audios', storagePath);
         logger.info('TTS: public URL obtained', { audioUrl });
 
-        // g) save audio_url
+        // h) save audio_url
         await supabase.from('content_deliveries')
           .update({ audio_url: audioUrl, content_type: 'audio' })
           .eq('id', deliveryId);
 
-        // h) send audio
+        // i) send audio
         await whatsapp.sendAudio(phoneE164, audioUrl);
         sent = true;
         logger.info('onboarding: audio message sent', { profileId, deliveryId, audioUrl });
