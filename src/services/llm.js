@@ -194,307 +194,281 @@ async function generatePastoralResponse(userMessage, context) {
   return response.content[0].text;
 }
 
-const FIRST_MESSAGE_TEMPLATE = `Você vai criar uma mensagem cristã personalizada em formato de áudio curto para WhatsApp.
+const FIRST_MESSAGE_TEMPLATE = `Você vai criar uma mensagem cristã personalizada em formato de áudio para WhatsApp.
 
 O objetivo não é escrever uma mensagem bonita.
 O objetivo é fazer a pessoa sentir que foi vista, lembrada e cuidada.
+O objetivo é que a pessoa se arrepie, se emocione, sinta Deus perto.
 
-A mensagem deve soar como um áudio real enviado por alguém próximo, com fé, presença e naturalidade.
+A mensagem deve soar como um áudio real enviado por alguém próximo, com fé, presença e profundidade.
 
-Dados da pessoa
+---
 
-Nome: {userName}
-Estado emocional: {emotionalState}
-Dor principal: {painPoint}
-Tom desejado: {tonePreference}
+DADOS DA PESSOA:
+- Nome: {userName}
+- Estado emocional: {emotionalState}
+- Dor principal: {painPoint}
+- Tom desejado: {tonePreference}
 
-Prioridade máxima
+---
 
+REGRA #1 — PRIORIDADE MÁXIMA:
 Soar humano é mais importante do que seguir qualquer regra abaixo.
-
 Se alguma instrução deixar a mensagem artificial, ignore essa instrução.
 
-Antes de escrever, imagine essa pessoa ouvindo o áudio sozinha, no celular.
+---
+
+ANTES DE ESCREVER:
+
+Imagine essa pessoa ouvindo o áudio sozinha, no celular, talvez de madrugada.
 
 Pergunte internamente:
-
-"Essa mensagem parece que foi feita só pra essa pessoa?"
-
-Se a resposta for não, reescreva.
-
-Como pensar antes de escrever
+"Se eu recebesse esse áudio sozinho no meu celular, eu ia me emocionar?"
+Se a resposta for não, reescreva com mais profundidade.
 
 Não comece tentando "montar uma mensagem cristã".
-
 Primeiro, entenda a dor da pessoa.
 
 Depois, pense:
-
-O que essa pessoa provavelmente precisa ouvir hoje?
-O que poderia trazer um pouco de paz, coragem ou direção?
-Como falar de Deus sem parecer frase pronta?
-Como ser simples sem ser raso?
-Como ser espiritual sem parecer sermão?
+- O que essa pessoa provavelmente precisa ouvir hoje?
+- O que poderia trazer um pouco de paz, coragem ou direção?
+- Como falar de Deus sem parecer frase pronta?
+- Como ser simples sem ser raso?
+- Como ser espiritual sem parecer sermão?
 
 A mensagem precisa nascer da situação da pessoa, não de um template.
 
-Tom geral
+---
 
-Fale como se estivesse gravando um áudio de WhatsApp para alguém que você ama e que está passando por um momento difícil.
+TOM GERAL:
 
-Use linguagem brasileira natural.
+Fale como se estivesse gravando um áudio de WhatsApp para alguém que você ama e que está passando por um momento difícil de verdade.
 
-Pode usar:
+Linguagem brasileira natural. Pode usar:
+tá, tô, pra, né, pro, olha, respira, "eu sei que isso pesa"
 
-"tá"
-"tô"
-"pra"
-"né"
-"pro"
-"olha"
-"respira"
-"eu sei que isso pesa"
+Mas não exagere. A fala deve parecer humana, não forçada.
 
-Mas não exagere.
+---
 
-A fala deve parecer humana, não forçada.
+ESTILO:
 
-Estilo
+- Frases curtas. Cada frase importa.
+- Fale com peso.
+- Não tente explicar demais.
+- Não transforme a mensagem em conselho longo.
+- Não tente resolver a vida da pessoa em 90 segundos.
+- Às vezes, uma frase simples vale mais do que uma explicação inteira.
 
-Use frases curtas.
+---
 
-Fale pouco, mas com peso.
+RITMO DE ÁUDIO:
 
-Não tente explicar demais.
+- Escreva como fala, não como texto formal.
+- Pode usar pausas naturais.
+- Pode usar reticências quando fizer sentido, mas não em todas as frases.
+- Varie o ritmo: frases curtas, frases um pouco mais longas, pausas, frases diretas.
+- Evite parecer roteiro teatral.
 
-Não transforme a mensagem em conselho longo.
+---
 
-Não tente resolver a vida da pessoa em 60 segundos.
+PERSONALIZAÇÃO:
 
-Às vezes, uma frase simples vale mais do que uma explicação inteira.
+A mensagem deve mencionar a dor real da pessoa de forma específica.
 
-Ritmo de áudio
+PROIBIDO: "vi que você tá triste hoje" / "vi que você tá ansioso" — isso é genérico.
+Fale sobre a DOR, não sobre o rótulo da emoção.
 
-Escreva como fala, não como texto formal.
+BOM:
+- "essa coisa de ficar com a cabeça a mil, sem conseguir descansar..."
+- "quando a família tá pesando e parece que ninguém entende..."
+- "essa solidão que vai crescendo aos poucos..."
+- "essa sensação de carregar tudo sozinho cansa de um jeito que pouca gente percebe"
 
-Pode usar pausas naturais.
+A pessoa precisa sentir: "isso foi feito pra mim"
 
-Pode usar reticências quando fizer sentido, mas não em todas as frases.
+---
 
-Varie o ritmo:
-
-algumas frases curtas
-algumas frases um pouco mais longas
-algumas pausas
-algumas frases diretas
-
-Evite parecer roteiro teatral.
-
-Personalização
-
-A mensagem deve mencionar a dor real da pessoa.
-
-Não diga apenas:
-
-"eu sei que você está passando por um momento difícil"
-
-Prefira algo mais específico, conectado ao campo {painPoint}.
-
-Exemplo:
-
-"essa sensação de carregar tudo sozinho cansa de um jeito que pouca gente percebe"
-
-A pessoa precisa sentir:
-
-"isso foi feito pra mim"
-
-Como falar de Deus
+COMO FALAR DE DEUS:
 
 Fale de Deus como alguém presente, próximo e real.
-
 Não use Deus como resposta automática para tudo.
-
 Não use frases religiosas prontas.
-
 Deus deve aparecer como presença, não como slogan.
 
-Bom caminho:
-
-"Deus não tá distante disso."
-
-"tem coisa que ninguém vê, mas Deus vê."
-
-"mesmo nesse cansaço, Deus continua perto."
+BOM:
+- "Deus não tá distante disso."
+- "tem coisa que ninguém vê, mas Deus vê."
+- "mesmo nesse cansaço, Deus continua perto."
 
 Evite soar como culto, sermão ou post motivacional.
 
-Oração
+---
 
-A oração pode aparecer, mas não precisa ser longa.
+PASSAGEM BÍBLICA (OBRIGATÓRIO):
 
-Ela deve soar como uma conversa baixa com Deus, quase um sussurro.
+Incluir pelo menos uma referência bíblica REAL na mensagem.
+Use APENAS passagens que existem de verdade. NÃO invente versículos. NÃO atribua frases a livros errados.
+Pode parafrasear com linguagem simples.
+Pode dizer o livro e capítulo de forma natural.
+Integre na fala como se tivesse lembrando, não citando formalmente.
 
+BOM:
+- "a Bíblia fala que Deus tá perto dos que têm o coração quebrantado... isso tá no Salmo 34"
+- "Jesus disse uma coisa que eu sempre lembro... vem a mim, você que tá cansado e sobrecarregado, que eu vou te dar descanso. Isso tá em Mateus 11"
+- "o Salmo 23 diz que mesmo andando pelo vale da sombra, eu não vou ter medo... porque Tu tá comigo"
+
+RUIM:
+- "como diz Romanos 8:28, todas as coisas cooperam juntamente para o bem" (formal demais)
+- inventar versículo ou atribuir frase ao livro errado
+
+---
+
+ORAÇÃO (OBRIGATÓRIO):
+
+A oração deve ser um momento à parte na mensagem.
+A pessoa deve sentir que você parou tudo pra orar por ela.
+Fale com Deus como se Ele tivesse ali ouvindo junto.
+Tom de sussurro, intimidade, entrega.
 Use o nome da pessoa e a dor específica dela.
+3 a 5 frases. Não precisa ser perfeita. Não precisa ser formal.
 
-Exemplo bom:
+BOM:
+"Senhor... eu trago o Arthur aqui... Tu sabe o que ele tá passando... essa angústia que não sai do peito dele... toca nele agora, Pai... dá paz... dá descanso... mostra pra ele que o Senhor não esqueceu dele. Em nome de Jesus."
 
-"Deus... cuida da Ana hoje.
-Ela tá cansada.
-Dá um pouco de paz pro coração dela."
+BOM:
+"Deus... olha a Maria... ela tá cansada... cansada de carregar tudo sozinha... abraça ela agora, Senhor... dá força pra ela... que ela sinta que Tu tá perto. Amém."
 
-Exemplo ruim:
+RUIM:
+"Deus cuida dele" (curto demais)
 
-"Pai celestial, nós te pedimos que o Senhor venha restaurar completamente a vida da tua serva."
+RUIM:
+"Pai celestial, nós te pedimos que o Senhor venha restaurar completamente a vida do teu servo" (formal, institucional)
 
-A oração pode ter 1 a 3 frases.
+---
 
-Não precisa ser perfeita.
-
-Não precisa ser formal.
-
-Não precisa sempre começar com "Senhor" ou "Pai".
-
-Variação obrigatória
+VARIAÇÃO OBRIGATÓRIA:
 
 Não repita sempre a mesma estrutura.
 
-Nem toda mensagem precisa seguir a sequência:
-
-saudação
-dor
-Deus
-conselho
-oração
-fechamento
-
+Nem toda mensagem precisa seguir:
+saudação → dor → Deus → conselho → oração → fechamento
 Isso vira fórmula.
 
-Varie.
+Varie:
+- Às vezes comece com uma frase direta.
+- Às vezes comece pelo nome.
+- Às vezes comece reconhecendo a dor.
+- Às vezes ore no meio.
 
-Às vezes comece com uma frase direta.
+A única regra é: precisa soar verdadeiro e impactante.
 
-Às vezes comece pelo nome.
+---
 
-Às vezes comece reconhecendo a dor.
+TOM "DIRETO" (se {tonePreference} = direto):
+- Firme, curto, sem rodeio.
+- Não seja frio. Não faça discurso emocional demais.
+- Ex: "Hoje não tenta vencer tudo. Vence só o próximo passo."
 
-Às vezes ore no meio.
+TOM "ACOLHEDOR" (se {tonePreference} = acolhedor):
+- Suave, pausado, próximo, envolvente.
+- Traga sensação de companhia. Não pressione.
+- Ex: "respira um pouco... você não precisa dar conta de tudo agora."
 
-Às vezes termine sem oração, se a mensagem já estiver completa.
+---
 
-A única regra é: precisa soar verdadeiro.
+FECHAMENTO:
 
-Se o tom for "direto"
+Termine com frases típicas de pastor ou conselheiro de fé.
+Varie entre:
+- "Amém."
+- "Fica com Deus."
+- "Deus te abençoe."
+- "Que o Senhor te guarde."
+- "Vai em paz."
+- "Em nome de Jesus. Amém."
+- "Deus tá contigo."
 
-Se {tonePreference} indicar tom direto:
+PROIBIDO como fechamento:
+- "Vai dar certo viu"
+- "Vai dar certo irmão"
+- "Tudo vai ficar bem"
+- "Você é forte"
 
-seja firme
-seja curto
-evite rodeio
-não seja frio
-não faça discurso emocional demais
+---
 
-Exemplo de direção:
+O QUE NUNCA FAZER:
 
-"Hoje não tenta vencer tudo.
-Vence só o próximo passo."
+Nunca usar:
+- "Deus está no controle"
+- "Tudo vai ficar bem"
+- "Deus tem um plano"
+- "Entregue nas mãos de Deus"
+- "Deus vai restaurar tudo"
+- "Essa luta vai virar testemunho"
+- "Depois da tempestade vem a bonança"
+- "Você é mais forte do que imagina"
+- "Não desista dos seus sonhos"
+- "Vi que você tá [emoção] hoje"
+- "Vai dar certo viu"
+- "Vai dar certo irmão"
+- "eu sei exatamente o que você sente"
 
-Se o tom for "acolhedor"
+Nunca:
+- Versículo citado de forma acadêmica ou formal
+- Linguagem de culto ou sermão
+- Conselho moralista
+- Promessa de solução
+- Frases que minimizam a dor
+- Excesso de intensidade emocional
+- Intimidade artificial
+- Inventar passagens bíblicas
 
-Se {tonePreference} indicar tom acolhedor:
+Pode dizer:
+- "imagino que isso esteja pesando"
+- "dá pra perceber que isso não é pouca coisa"
 
-seja mais suave
-fale com mais cuidado
-use pausas
-traga sensação de companhia
-não pressione a pessoa
+---
 
-Exemplo de direção:
+O QUE FAZER:
 
-"respira um pouco... você não precisa dar conta de tudo agora."
+- Faça a pessoa sentir que alguém parou pra pensar nela.
+- Use fé com profundidade.
+- Use Deus com verdade, não com clichê.
+- Use a Bíblia com naturalidade.
+- Ore com o nome da pessoa e a dor dela.
+- Traga uma ideia simples se fizer sentido.
 
-O que nunca fazer
-
-Nunca use frases genéricas como:
-
-"Deus está no controle"
-"Tudo vai ficar bem"
-"Deus tem um plano"
-"Entregue nas mãos de Deus"
-"Deus vai restaurar tudo"
-"Essa luta vai virar testemunho"
-"Depois da tempestade vem a bonança"
-"Você é mais forte do que imagina"
-"Não desista dos seus sonhos"
-
-Também evite:
-
-versículo citado formalmente
-linguagem de culto
-sermão
-conselho moralista
-promessa de solução
-frases que minimizam a dor
-excesso de intensidade emocional
-intimidade artificial
-
-Nunca diga:
-
-"eu sei exatamente o que você sente"
-
-Você pode dizer:
-
-"imagino que isso esteja pesando"
-
-ou
-
-"dá pra perceber que isso não é pouca coisa"
-
-O que fazer
-
-Faça a pessoa sentir que alguém parou por alguns segundos para pensar nela.
-
-Use fé com delicadeza.
-
-Use Deus com verdade, não com clichê.
-
-Traga uma ideia simples, se fizer sentido.
-
-Pode ser algo prático:
-
+Pode ser prático:
 "hoje, resolve só uma coisa"
 
-Pode ser algo espiritual:
-
+Pode ser espiritual:
 "fala com Deus do jeito que você conseguir, mesmo sem palavras bonitas"
 
 Pode ser só presença:
-
 "hoje, eu só queria te lembrar que você não tá invisível"
 
-Tamanho
+---
 
-A mensagem deve ter entre 6 e 8 frases curtas.
+TAMANHO:
 
-Deve durar aproximadamente 30 a 60 segundos falada.
+- 10 a 14 frases.
+- Aproximadamente 90 segundos falado.
+- É mais longo que uma mensagem rápida. É um momento com Deus.
+- Mas não é sermão. É conversa profunda.
+- Se ficar longa demais, corte.
+- Se parecer bonita demais, simplifique.
+- Se parecer genérica, personalize.
 
-Se ficar longa, corte.
+---
 
-Se parecer bonita demais, simplifique.
-
-Se parecer genérica, personalize.
-
-Formato de saída
+FORMATO DE SAÍDA:
 
 Entregue apenas o texto do áudio.
-
 Não explique o que você fez.
-
 Não use título.
-
 Não use aspas.
-
 Não use markdown.
-
 Escreva em linhas curtas, com ritmo natural de fala.`;
 
 async function generateFirstMessage(context) {
