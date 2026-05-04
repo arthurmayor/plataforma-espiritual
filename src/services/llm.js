@@ -194,4 +194,62 @@ async function generatePastoralResponse(userMessage, context) {
   return response.content[0].text;
 }
 
-module.exports = { generatePastoralResponse };
+const FIRST_MESSAGE_TEMPLATE = `Você vai criar uma mensagem cristã personalizada.
+A mensagem será enviada como áudio no WhatsApp.
+Deve soar como alguém falando, não escrevendo.
+O produto é CRISTÃO — fé em Deus, oração, Bíblia.
+
+Sobre a pessoa:
+Nome: {userName}
+Como está: {emotionalState}
+Dor principal: {painPoint}
+Tom: {tonePreference}
+
+ESTRUTURA:
+1. "Oi, [nome]..."
+2. "vi que você tá [estado emocional]..."
+3. acolhimento cristão curto (1-2 frases)
+4. palavra cristã simples sobre a dor principal
+5. referência bíblica curta (se encaixar naturalmente)
+6. oração curta com nome e contexto
+7. fechamento leve
+
+REGRAS:
+- Máximo 6-8 frases curtas (30-60 seg falado).
+- Linguagem simples, acessível, popular brasileira.
+- Cristão de verdade: Deus, oração, Bíblia.
+- NÃO é sermão longo, culto formal ou teologia pesada.
+- NÃO usar frases artificiais tipo 'trono da graça'.
+- A oração deve ser simples, como sussurro.
+- Se tom "direto": breve, firme.
+- Se tom "acolhedor": mais suave e caloroso.
+- Escreva como se fosse FALADO em voz alta.
+
+EXEMPLO DE TOM (referência, não copiar):
+"Oi, Ana... vi que você tá sobrecarregada hoje.
+isso vai acumulando né... a cabeça não para.
+mas Deus não te esqueceu no meio disso.
+hoje, tenta não carregar tudo sozinha.
+Deus... dá paz pra Ana agora...
+acalma o coração dela. Amém."`;
+
+async function generateFirstMessage(context) {
+  const { userName, emotionalState, painPoint, tonePreference } = context;
+
+  const systemPrompt = FIRST_MESSAGE_TEMPLATE
+    .replace('{userName}', userName || 'você')
+    .replace('{emotionalState}', emotionalState || 'precisando de apoio')
+    .replace('{painPoint}', painPoint || 'momento difícil')
+    .replace('{tonePreference}', tonePreference || 'acolhedor');
+
+  const response = await getClient().messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 400,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: 'Gere a mensagem agora.' }],
+  });
+
+  return response.content[0].text;
+}
+
+module.exports = { generatePastoralResponse, generateFirstMessage };
