@@ -2,13 +2,18 @@ const { execFile } = require('child_process');
 const { promisify } = require('util');
 const fs = require('fs');
 const path = require('path');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
 const logger = require('../utils/logger');
+
+const FFMPEG_PATH = ffmpegInstaller.path;
+const FFPROBE_PATH = ffprobeInstaller.path;
 
 const execFileAsync = promisify(execFile);
 
 // Get duration in seconds of a media file using ffprobe
 async function getAudioDuration(filePath) {
-  const { stdout } = await execFileAsync('ffprobe', [
+  const { stdout } = await execFileAsync(FFPROBE_PATH, [
     '-v', 'quiet',
     '-show_entries', 'format=duration',
     '-of', 'default=noprint_wrappers=1:nokey=1',
@@ -47,10 +52,12 @@ async function mixVoiceWithMusic(voiceBuffer, musicPath) {
       `afade=t=in:d=2,`,
       `afade=t=out:st=${fadeOutStart}:d=3`,
       `[music];`,
-      `[0:a][music]amix=inputs=2:duration=first[out]`,
+      `[0:a][music]amix=inputs=2:duration=first,`,
+      `loudnorm=I=-16:LRA=11:TP=-1.5`,
+      `[out]`,
     ].join('');
 
-    await execFileAsync('ffmpeg', [
+    await execFileAsync(FFMPEG_PATH, [
       '-y',
       '-i', voicePath,
       '-i', musicPath,
@@ -59,7 +66,6 @@ async function mixVoiceWithMusic(voiceBuffer, musicPath) {
       '-ac', '1',
       '-b:a', '128k',
       '-ar', '44100',
-      '-af', 'loudnorm=I=-16:LRA=11:TP=-1.5',
       outputPath,
     ]);
 
