@@ -159,20 +159,29 @@ router.post('/onboarding', async (req, res) => {
     // c–i) try audio path; fall back to text on any failure
     let sent = false;
 
+    logger.info('TTS: starting audio generation');
+    logger.info('TTS: ELEVENLABS_API_KEY exists?', { exists: !!process.env.ELEVENLABS_API_KEY });
+    logger.info('TTS: ELEVENLABS_VOICE_ID exists?', { exists: !!process.env.ELEVENLABS_VOICE_ID });
+
     if (process.env.ELEVENLABS_API_KEY) {
       try {
         // c) format for TTS
         const audioText = formatTextForAudio(text);
 
         // d) generate MP3
+        logger.info('TTS: calling generateSpeech', { textLength: audioText.length });
         const audioBuffer = await generateSpeech(audioText);
+        logger.info('TTS: speech generated', { bufferSize: audioBuffer?.length });
 
         // e) upload to Supabase Storage
         const storagePath = `first-messages/${deliveryId}.mp3`;
+        logger.info('TTS: uploading to Supabase Storage');
         await uploadFile('audios', storagePath, audioBuffer, 'audio/mpeg');
 
         // f) public URL
+        logger.info('TTS: uploaded, getting public URL');
         const audioUrl = getPublicUrl('audios', storagePath);
+        logger.info('TTS: public URL obtained', { audioUrl });
 
         // g) save audio_url
         await supabase.from('content_deliveries')
@@ -184,8 +193,11 @@ router.post('/onboarding', async (req, res) => {
         sent = true;
         logger.info('onboarding: audio message sent', { profileId, deliveryId, audioUrl });
       } catch (audioErr) {
+        logger.error('TTS: failed at audio generation', { error: audioErr.message, stack: audioErr.stack });
         logger.warn('onboarding: audio path failed, falling back to text', { error: audioErr.message });
       }
+    } else {
+      logger.warn('TTS: ELEVENLABS_API_KEY not set — skipping audio, sending text');
     }
 
     // fallback: send text if audio was not sent
