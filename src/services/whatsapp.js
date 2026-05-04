@@ -33,4 +33,23 @@ async function sendText(to, text) {
   return message;
 }
 
-module.exports = { sendText, fromWhatsApp, toWhatsApp };
+async function sendAudio(to, audioUrl) {
+  const from = toWhatsApp(env.TWILIO_PHONE_NUMBER);
+  const toFormatted = toWhatsApp(to);
+
+  if (to === env.TWILIO_PHONE_NUMBER || toFormatted === from) {
+    logger.warn('Attempted to send audio to own Twilio number — skipped', { to });
+    return null;
+  }
+
+  const message = await getClient().messages.create({
+    from,
+    to: toFormatted,
+    mediaUrl: [audioUrl],
+  });
+
+  logger.info('WhatsApp audio sent', { sid: message.sid, to });
+  return message;
+}
+
+module.exports = { sendText, sendAudio, fromWhatsApp, toWhatsApp };

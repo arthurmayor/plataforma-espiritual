@@ -27,4 +27,7 @@ module.exports = {
   get TWILIO_PHONE_NUMBER() { return process.env.TWILIO_PHONE_NUMBER; },
   get ANTHROPIC_API_KEY() { return process.env.ANTHROPIC_API_KEY; },
   get PORT() { return process.env.PORT || 3000; },
+  get ELEVENLABS_API_KEY() { return process.env.ELEVENLABS_API_KEY; },
+  get ELEVENLABS_VOICE_ID() { return process.env.ELEVENLABS_VOICE_ID; },
+  get ELEVENLABS_MODEL() { return process.env.ELEVENLABS_MODEL; },
 };

@@ -252,4 +252,25 @@ async function generateFirstMessage(context) {
   return response.content[0].text;
 }
 
-module.exports = { generatePastoralResponse, generateFirstMessage };
+function formatTextForAudio(text) {
+  return text
+    // normalise line endings
+    .replace(/\r\n/g, '\n')
+    // split into sentences on . ! ? followed by space or end
+    .split(/(?<=[.!?])\s+/)
+    // trim each piece
+    .map(s => s.trim())
+    .filter(Boolean)
+    // ensure each sentence ends with ... for rhythmic pauses (unless already has ... or !)
+    .map(s => {
+      if (/[.!?…]$/.test(s)) return s.replace(/\.$/,'...');
+      return s + '...';
+    })
+    // join with double newline for TTS paragraph pauses
+    .join('\n\n')
+    // collapse accidental triple+ newlines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+module.exports = { generatePastoralResponse, generateFirstMessage, formatTextForAudio };

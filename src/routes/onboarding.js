@@ -1,7 +1,9 @@
 const { Router } = require('express');
 const supabase = require('../config/supabase');
+const { uploadFile, getPublicUrl } = require('../config/supabase');
 const whatsapp = require('../services/whatsapp');
-const { generateFirstMessage } = require('../services/llm');
+const { generateFirstMessage, formatTextForAudio } = require('../services/llm');
+const { generateSpeech } = require('../services/tts');
 const { normalizePhone, isValidBrazilianPhone } = require('../utils/phone');
 const logger = require('../utils/logger');
 
@@ -132,35 +134,78 @@ router.post('/onboarding', async (req, res) => {
 
   // ── i: async generation + send ────────────────────────────────────────────
   setImmediate(async () => {
+    // a) generate text
+    let text;
     try {
-      const text = await generateFirstMessage({
+      text = await generateFirstMessage({
         userName: name,
         emotionalState: emotional_state,
         painPoint: pain_point,
         tonePreference: tone_preference,
       });
-
-      await supabase
-        .from('content_deliveries')
-        .update({ generated_text: text })
-        .eq('id', deliveryId);
-
-      await whatsapp.sendText(phoneE164, text);
-
-      await supabase
-        .from('content_deliveries')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
-        .eq('id', deliveryId);
-
-      logger.info('onboarding: first message sent', { profileId, deliveryId });
     } catch (err) {
-      logger.error('onboarding: async generation/send failed', err);
-
-      await supabase
-        .from('content_deliveries')
+      logger.error('onboarding: text generation failed', err);
+      await supabase.from('content_deliveries')
         .update({ status: 'failed', error_message: err.message })
         .eq('id', deliveryId);
+      return;
     }
+
+    // b) save generated_text
+    await supabase.from('content_deliveries')
+      .update({ generated_text: text })
+      .eq('id', deliveryId);
+
+    // c–i) try audio path; fall back to text on any failure
+    let sent = false;
+
+    if (process.env.ELEVENLABS_API_KEY) {
+      try {
+        // c) format for TTS
+        const audioText = formatTextForAudio(text);
+
+        // d) generate MP3
+        const audioBuffer = await generateSpeech(audioText);
+
+        // e) upload to Supabase Storage
+        const storagePath = `first-messages/${deliveryId}.mp3`;
+        await uploadFile('audios', storagePath, audioBuffer, 'audio/mpeg');
+
+        // f) public URL
+        const audioUrl = getPublicUrl('audios', storagePath);
+
+        // g) save audio_url
+        await supabase.from('content_deliveries')
+          .update({ audio_url: audioUrl, content_type: 'audio' })
+          .eq('id', deliveryId);
+
+        // h) send audio
+        await whatsapp.sendAudio(phoneE164, audioUrl);
+        sent = true;
+        logger.info('onboarding: audio message sent', { profileId, deliveryId, audioUrl });
+      } catch (audioErr) {
+        logger.warn('onboarding: audio path failed, falling back to text', { error: audioErr.message });
+      }
+    }
+
+    // fallback: send text if audio was not sent
+    if (!sent) {
+      try {
+        await whatsapp.sendText(phoneE164, text);
+        sent = true;
+        logger.info('onboarding: text message sent (fallback)', { profileId, deliveryId });
+      } catch (textErr) {
+        logger.error('onboarding: text fallback also failed', textErr);
+        await supabase.from('content_deliveries')
+          .update({ status: 'failed', error_message: textErr.message })
+          .eq('id', deliveryId);
+        return;
+      }
+    }
+
+    await supabase.from('content_deliveries')
+      .update({ status: 'sent', sent_at: new Date().toISOString() })
+      .eq('id', deliveryId);
   });
 });
 
