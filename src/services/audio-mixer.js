@@ -48,12 +48,11 @@ async function mixVoiceWithMusic(voiceBuffer, musicPath) {
     const fadeOutStart = Math.max(0, voiceDuration - 3);
 
     const filterComplex = [
-      `[1:a]volume=0.15,`,
+      `[1:a]volume=0.35,`,
       `afade=t=in:d=2,`,
       `afade=t=out:st=${fadeOutStart}:d=3`,
       `[music];`,
-      `[0:a][music]amix=inputs=2:duration=first,`,
-      `loudnorm=I=-16:LRA=11:TP=-1.5`,
+      `[0:a][music]amix=inputs=2:duration=first`,
       `[out]`,
     ].join('');
 
