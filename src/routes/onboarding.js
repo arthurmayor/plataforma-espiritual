@@ -51,7 +51,6 @@ router.post('/onboarding', async (req, res) => {
       .insert({
         phone_e164: phoneE164,
         full_name: name,
-        plan_status: 'free',
         onboarding_completed: true,
         opt_in_whatsapp: opt_in_whatsapp ?? true,
       })
@@ -65,44 +64,58 @@ router.post('/onboarding', async (req, res) => {
     profileId = data.id;
   }
 
-  // ── e: upsert user_preferences ─────────────────────────────────────────────
-  const { error: prefError } = await supabase
-    .from('user_preferences')
-    .upsert(
-      {
-        profile_id: profileId,
-        emotional_state: emotional_state || null,
-        pain_point: pain_point || null,
-        tone_preference: tone_preference || null,
-      },
-      { onConflict: 'profile_id' }
-    );
+  // ── e: upsert user_preferences (select-then-insert/update) ────────────────
+  const prefPayload = {
+    emotional_state: emotional_state || null,
+    pain_point: pain_point || null,
+    tone_preference: tone_preference || null,
+  };
 
-  if (prefError) {
-    logger.error('onboarding: failed to upsert user_preferences', prefError);
+  const { data: existingPref } = await supabase
+    .from('user_preferences')
+    .select('id')
+    .eq('profile_id', profileId)
+    .maybeSingle();
+
+  if (existingPref) {
+    const { error: prefError } = await supabase
+      .from('user_preferences')
+      .update(prefPayload)
+      .eq('profile_id', profileId);
+    if (prefError) logger.error('onboarding: failed to update user_preferences', prefError);
+  } else {
+    const { error: prefError } = await supabase
+      .from('user_preferences')
+      .insert({ profile_id: profileId, ...prefPayload });
+    if (prefError) logger.error('onboarding: failed to insert user_preferences', prefError);
   }
 
   // ── f: idempotency — already delivered today ───────────────────────────────
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
 
-  const { data: existing_delivery } = await supabase
-    .from('content_delivery')
+  const { data: existingDelivery } = await supabase
+    .from('content_deliveries')
     .select('id')
     .eq('profile_id', profileId)
     .gte('created_at', todayStart.toISOString())
     .maybeSingle();
 
-  if (existing_delivery) {
+  if (existingDelivery) {
     logger.info('onboarding: delivery already exists for today', { profileId });
-    return res.status(200).json({ success: true, message: 'Já gerada hoje', profileId, deliveryId: existing_delivery.id });
+    return res.status(200).json({
+      success: true,
+      message: 'Já gerada hoje',
+      profileId,
+      deliveryId: existingDelivery.id,
+    });
   }
 
   // ── g: create content_delivery with status='pending' ──────────────────────
   const inputContext = { name, emotional_state, pain_point, tone_preference, opt_in_whatsapp };
 
   const { data: delivery, error: deliveryError } = await supabase
-    .from('content_delivery')
+    .from('content_deliveries')
     .insert({ profile_id: profileId, status: 'pending', input_context: inputContext })
     .select('id')
     .single();
@@ -128,14 +141,14 @@ router.post('/onboarding', async (req, res) => {
       });
 
       await supabase
-        .from('content_delivery')
+        .from('content_deliveries')
         .update({ generated_text: text })
         .eq('id', deliveryId);
 
       await whatsapp.sendText(phoneE164, text);
 
       await supabase
-        .from('content_delivery')
+        .from('content_deliveries')
         .update({ status: 'sent', sent_at: new Date().toISOString() })
         .eq('id', deliveryId);
 
@@ -144,7 +157,7 @@ router.post('/onboarding', async (req, res) => {
       logger.error('onboarding: async generation/send failed', err);
 
       await supabase
-        .from('content_delivery')
+        .from('content_deliveries')
         .update({ status: 'failed', error_message: err.message })
         .eq('id', deliveryId);
     }
