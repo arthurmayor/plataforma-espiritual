@@ -112,7 +112,9 @@ router.post('/onboarding', async (req, res) => {
     if (prefError) logger.error('onboarding: failed to insert user_preferences', prefError);
   }
 
-  // ── f: idempotency — already delivered today ───────────────────────────────
+  // ── f: idempotency — onboarding (day_number=0) already delivered today ─────
+  // Escopado a day_number=0: deliveries da sequência diária (D1–D7), criadas
+  // pelo scheduler, não podem bloquear um novo envio de onboarding.
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
 
@@ -120,6 +122,7 @@ router.post('/onboarding', async (req, res) => {
     .from('content_deliveries')
     .select('id')
     .eq('profile_id', profileId)
+    .eq('day_number', 0)
     .gte('created_at', todayStart.toISOString())
     .maybeSingle();
 
