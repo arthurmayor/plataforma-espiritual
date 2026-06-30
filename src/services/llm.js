@@ -8,6 +8,16 @@ function getClient() {
 // claude-sonnet-4-20250514 foi descontinuado (404). Usando o modelo Sonnet mais recente.
 const MODEL = 'claude-sonnet-5';
 
+// Extrai o texto de TODOS os blocos de texto da resposta. Robusto a respostas
+// que comecem com um bloco diferente (ex: thinking) — não assume content[0].
+function extractText(response) {
+  return (response.content || [])
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text)
+    .join('')
+    .trim();
+}
+
 const SYSTEM_TEMPLATE = `PRIORIDADE MÁXIMA:
 Se alguma regra deste prompt estiver deixando a resposta artificial, ignore a regra.
 Soar humano é mais importante do que seguir instruções.
@@ -189,12 +199,12 @@ async function generatePastoralResponse(userMessage, context) {
 
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 500,
+    max_tokens: 600,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
   });
 
-  return response.content[0].text;
+  return extractText(response);
 }
 
 const FIRST_MESSAGE_TEMPLATE = `Você vai criar uma mensagem cristã personalizada em formato de áudio para WhatsApp.
@@ -485,12 +495,12 @@ async function generateFirstMessage(context) {
 
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 400,
+    max_tokens: 800,
     system: systemPrompt,
     messages: [{ role: 'user', content: 'Gere a mensagem agora.' }],
   });
 
-  return response.content[0].text;
+  return extractText(response);
 }
 
 function formatTextForAudio(text) {
@@ -685,12 +695,12 @@ async function generateDailyMessage(context, dayNumber, recentThemes = []) {
 
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 700,
+    max_tokens: 1100,
     system: systemPrompt,
     messages: [{ role: 'user', content: 'Gere a mensagem do dia agora, no formato JSON pedido.' }],
   });
 
-  return parseDailyJson(response.content[0].text, dayNumber);
+  return parseDailyJson(extractText(response), dayNumber);
 }
 
 module.exports = { generatePastoralResponse, generateFirstMessage, generateDailyMessage, formatTextForAudio };
