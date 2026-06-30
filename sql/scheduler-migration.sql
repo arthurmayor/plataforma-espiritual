@@ -11,6 +11,10 @@ ALTER TABLE content_deliveries ADD COLUMN IF NOT EXISTS scripture_ref TEXT;
 -- profiles: data de início do ciclo de 7 dias (preenchida no onboarding)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS sequence_start_date DATE;
 
+-- profiles: status do plano (o scheduler só processa quem está em 'free')
+-- OBRIGATÓRIO: o endpoint /api/scheduler/run filtra por plan_status = 'free'.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_status TEXT NOT NULL DEFAULT 'free';
+
 -- Índice para a checagem de idempotência (profile_id + day_number)
 CREATE INDEX IF NOT EXISTS idx_content_deliveries_profile_day
   ON content_deliveries (profile_id, day_number);
