@@ -33,6 +33,21 @@ function safeUnlink(filePath) {
   try { fs.unlinkSync(filePath); } catch (_) { /* ignore */ }
 }
 
+const BACKGROUND_MUSIC_URL = 'https://dapxhktnsszbqhxyqmde.supabase.co/storage/v1/object/public/audios/music/background.mp3';
+const BACKGROUND_MUSIC_PATH = '/tmp/background-music.mp3';
+
+// Download the background track once and cache it locally in /tmp.
+async function ensureBackgroundMusic() {
+  if (fs.existsSync(BACKGROUND_MUSIC_PATH)) return BACKGROUND_MUSIC_PATH;
+  logger.info('audio-mixer: downloading background music');
+  const res = await fetch(BACKGROUND_MUSIC_URL);
+  if (!res.ok) throw new Error(`Failed to download background music: ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(BACKGROUND_MUSIC_PATH, buf);
+  logger.info('audio-mixer: background music cached', { bytes: buf.length });
+  return BACKGROUND_MUSIC_PATH;
+}
+
 /**
  * Mix voice buffer with a background music file.
  * @param {Buffer} voiceBuffer  MP3 buffer from ElevenLabs
@@ -77,4 +92,4 @@ async function mixVoiceWithMusic(voiceBuffer, musicPath) {
   }
 }
 
-module.exports = { mixVoiceWithMusic };
+module.exports = { mixVoiceWithMusic, ensureBackgroundMusic, BACKGROUND_MUSIC_PATH };

@@ -5,6 +5,9 @@ function getClient() {
   return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 }
 
+// claude-sonnet-4-20250514 foi descontinuado (404). Sucessor direto da mesma família.
+const MODEL = 'claude-sonnet-4-5';
+
 const SYSTEM_TEMPLATE = `PRIORIDADE MÁXIMA:
 Se alguma regra deste prompt estiver deixando a resposta artificial, ignore a regra.
 Soar humano é mais importante do que seguir instruções.
@@ -185,7 +188,7 @@ async function generatePastoralResponse(userMessage, context) {
   const systemPrompt = buildSystemPrompt(context);
 
   const response = await getClient().messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: MODEL,
     max_tokens: 500,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
@@ -481,7 +484,7 @@ async function generateFirstMessage(context) {
     .replace('{tonePreference}', tonePreference || 'acolhedor');
 
   const response = await getClient().messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: MODEL,
     max_tokens: 400,
     system: systemPrompt,
     messages: [{ role: 'user', content: 'Gere a mensagem agora.' }],
@@ -511,4 +514,183 @@ function formatTextForAudio(text) {
     .trim();
 }
 
-module.exports = { generatePastoralResponse, generateFirstMessage, formatTextForAudio };
+// ── Sequência diária (D1 a D7) ──────────────────────────────────────────────
+
+// Ângulo sugerido para cada dia. Sempre conectado à dor principal da pessoa.
+// O modelo pode trocar o ângulo se ele colidir com os temas já usados.
+const DAY_ANGLES = {
+  1: 'Deus te vê e está perto — você não está sozinho nessa',
+  2: 'descanso — pode soltar o peso, não precisa dar conta de tudo hoje',
+  3: 'coragem pra dar só o próximo passo — força pro dia de hoje',
+  4: 'esperança e fé no meio da dificuldade — fé cansada ainda é fé',
+  5: 'o seu valor diante de Deus — quem você é pra Ele',
+  6: 'gratidão — enxergar as pequenas luzes que ainda existem',
+  7: 'entrega e recomeço — uma bênção pra seguir, Deus continua contigo',
+};
+
+const DAILY_MESSAGE_TEMPLATE = `Você vai criar a mensagem cristã do DIA {dayNumber} de uma sequência de 7 dias de acompanhamento espiritual.
+A mensagem será enviada como áudio no WhatsApp.
+
+O objetivo não é escrever uma mensagem bonita.
+O objetivo é fazer a pessoa sentir que foi vista, lembrada e cuidada — de novo, mais um dia.
+O objetivo é que a pessoa se arrepie, se emocione, sinta Deus perto.
+
+A mensagem deve soar como um áudio real enviado por alguém próximo, com fé, presença e profundidade.
+
+---
+
+DADOS DA PESSOA:
+- Nome: {userName}
+- Estado emocional: {emotionalState}
+- Dor principal: {painPoint}
+- Tom desejado: {tonePreference}
+
+DIA DA SEQUÊNCIA: {dayNumber} de 7
+ÂNGULO SUGERIDO PARA HOJE: {dayAngle}
+
+TEMAS E PASSAGENS JÁ USADOS NOS DIAS ANTERIORES (NÃO REPETIR):
+{recentThemes}
+
+---
+
+REGRA #1 — PRIORIDADE MÁXIMA:
+Soar humano é mais importante do que seguir qualquer regra abaixo.
+Se alguma instrução deixar a mensagem artificial, ignore essa instrução.
+
+REGRA #2 — NÃO REPETIR:
+- NÃO use nenhuma das passagens bíblicas já usadas nos dias anteriores. Escolha uma passagem REAL diferente.
+- NÃO repita o mesmo tema/abordagem dos dias anteriores. Hoje precisa soar diferente.
+- Se o ângulo sugerido colidir com algo já usado, escolha outro ângulo conectado à dor da pessoa.
+
+---
+
+ANTES DE ESCREVER:
+
+Imagine essa pessoa ouvindo o áudio sozinha, no celular, talvez de madrugada.
+Pergunte internamente: "Se eu recebesse esse áudio sozinho, eu ia me emocionar?"
+Se a resposta for não, reescreva com mais profundidade.
+
+A mensagem precisa nascer da situação da pessoa, não de um template.
+
+---
+
+TOM GERAL:
+Fale como se estivesse gravando um áudio de WhatsApp para alguém que você ama e que está passando por um momento difícil de verdade.
+Linguagem brasileira natural: tá, tô, pra, né, pro, olha, respira. Sem exagero.
+
+ESTILO:
+- Frases curtas. Cada frase importa. Fale com peso.
+- Não explique demais. Não vire conselho longo nem sermão.
+
+PERSONALIZAÇÃO:
+- Mencione a DOR real da pessoa de forma específica, não o rótulo da emoção.
+- PROIBIDO: "vi que você tá triste hoje" / "vi que você tá ansioso". Fale da dor, não do rótulo.
+- A pessoa precisa sentir: "isso foi feito pra mim".
+
+COMO FALAR DE DEUS:
+- Deus como presença próxima e real, nunca como slogan ou resposta automática.
+- Evite soar como culto, sermão ou post motivacional.
+
+PASSAGEM BÍBLICA (OBRIGATÓRIO):
+- Inclua pelo menos uma referência bíblica REAL, diferente das já usadas.
+- Use APENAS passagens que existem. NÃO invente versículos nem atribua frases a livros errados.
+- Integre na fala como quem lembra, não como quem cita formalmente.
+
+ORAÇÃO (OBRIGATÓRIO):
+- Momento à parte, tom de sussurro, intimidade, entrega.
+- Use o nome da pessoa e a dor específica dela. 3 a 5 frases.
+
+TOM "DIRETO": firme, curto, sem rodeio, sem frieza.
+TOM "ACOLHEDOR": suave, pausado, próximo, sensação de companhia.
+
+FECHAMENTO (varie): "Amém." / "Fica com Deus." / "Deus te abençoe." / "Que o Senhor te guarde." / "Vai em paz." / "Em nome de Jesus. Amém." / "Deus tá contigo."
+
+NUNCA usar clichês como:
+"Deus está no controle", "Tudo vai ficar bem", "Deus tem um plano", "Entregue nas mãos de Deus",
+"Deus vai restaurar tudo", "Essa luta vai virar testemunho", "Depois da tempestade vem a bonança",
+"Você é mais forte do que imagina", "Não desista dos seus sonhos", "Vi que você tá [emoção] hoje",
+"Vai dar certo viu", "Vai dar certo irmão", "eu sei exatamente o que você sente".
+Nunca invente passagens bíblicas.
+
+TAMANHO: 10 a 14 frases curtas, ~90 segundos falado. Conversa profunda, não sermão.
+
+---
+
+FORMATO DE SAÍDA (OBRIGATÓRIO):
+
+Responda APENAS com um objeto JSON válido, sem markdown, sem cercas de código, sem texto fora do JSON.
+O JSON deve ter exatamente estas chaves:
+
+{
+  "text": "o texto completo do áudio, em linhas curtas com ritmo natural de fala, sem aspas internas desnecessárias, sem markdown, sem título",
+  "theme": "tema/abordagem do dia em 2 a 5 palavras (ex: descanso e entrega)",
+  "scripture_ref": "a referência bíblica principal usada (ex: Salmo 34:18). Se nenhuma, use string vazia"
+}`;
+
+function replaceAllTokens(template, tokens) {
+  let out = template;
+  for (const [key, value] of Object.entries(tokens)) {
+    out = out.split(key).join(value);
+  }
+  return out;
+}
+
+function parseDailyJson(raw, dayNumber) {
+  let cleaned = String(raw).trim();
+  // strip markdown code fences if the model added them
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  // isolate the JSON object
+  const first = cleaned.indexOf('{');
+  const last = cleaned.lastIndexOf('}');
+  if (first !== -1 && last !== -1 && last > first) {
+    cleaned = cleaned.slice(first, last + 1);
+  }
+  try {
+    const obj = JSON.parse(cleaned);
+    return {
+      text: (obj.text || '').trim(),
+      theme: (obj.theme || `dia ${dayNumber}`).trim(),
+      scripture_ref: (obj.scripture_ref || '').trim(),
+    };
+  } catch (_) {
+    // Fallback: treat the whole response as the audio text
+    return { text: String(raw).trim(), theme: `dia ${dayNumber}`, scripture_ref: '' };
+  }
+}
+
+/**
+ * Gera a mensagem diária (D1 a D7).
+ * @param {object} context  { userName, emotionalState, painPoint, tonePreference }
+ * @param {number} dayNumber 1 a 7
+ * @param {string[]} recentThemes  temas/passagens já usados (para não repetir)
+ * @returns {Promise<{text:string, theme:string, scripture_ref:string}>}
+ */
+async function generateDailyMessage(context, dayNumber, recentThemes = []) {
+  const { userName, emotionalState, painPoint, tonePreference } = context;
+
+  const recentList =
+    recentThemes && recentThemes.length > 0
+      ? recentThemes.map((t) => `- ${t}`).join('\n')
+      : '(nenhum ainda — este é o primeiro da sequência)';
+
+  const systemPrompt = replaceAllTokens(DAILY_MESSAGE_TEMPLATE, {
+    '{userName}': userName || 'você',
+    '{emotionalState}': emotionalState || 'precisando de apoio',
+    '{painPoint}': painPoint || 'momento difícil',
+    '{tonePreference}': tonePreference || 'acolhedor',
+    '{dayNumber}': String(dayNumber),
+    '{dayAngle}': DAY_ANGLES[dayNumber] || 'presença, fé e cuidado conectados à dor da pessoa',
+    '{recentThemes}': recentList,
+  });
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 700,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: 'Gere a mensagem do dia agora, no formato JSON pedido.' }],
+  });
+
+  return parseDailyJson(response.content[0].text, dayNumber);
+}
+
+module.exports = { generatePastoralResponse, generateFirstMessage, generateDailyMessage, formatTextForAudio };

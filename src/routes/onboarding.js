@@ -36,6 +36,9 @@ router.post('/onboarding', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Invalid Brazilian phone number' });
   }
 
+  // sequence start (UTC date, YYYY-MM-DD) — day 0 of the 7-day cycle is today
+  const today = new Date().toISOString().slice(0, 10);
+
   // ── a/b/c/d: upsert profile ────────────────────────────────────────────────
   const { data: existing } = await supabase
     .from('profiles')
@@ -52,6 +55,7 @@ router.post('/onboarding', async (req, res) => {
         full_name: name,
         onboarding_completed: true,
         opt_in_whatsapp: opt_in_whatsapp ?? true,
+        sequence_start_date: today,
       })
       .eq('id', existing.id)
       .select('id')
@@ -70,6 +74,7 @@ router.post('/onboarding', async (req, res) => {
         full_name: name,
         onboarding_completed: true,
         opt_in_whatsapp: opt_in_whatsapp ?? true,
+        sequence_start_date: today,
       })
       .select('id')
       .single();
@@ -133,7 +138,7 @@ router.post('/onboarding', async (req, res) => {
 
   const { data: delivery, error: deliveryError } = await supabase
     .from('content_deliveries')
-    .insert({ profile_id: profileId, status: 'pending', input_context: inputContext })
+    .insert({ profile_id: profileId, status: 'pending', input_context: inputContext, day_number: 0 })
     .select('id')
     .single();
 

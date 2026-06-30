@@ -7,6 +7,7 @@ env.validate();
 
 const registerRouter = require('./routes/register');
 const onboardingRouter = require('./routes/onboarding');
+const schedulerRouter = require('./routes/scheduler');
 const webhookRouter = require('./routes/webhook');
 
 const app = express();
@@ -25,6 +26,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api', registerRouter);
 app.use('/api', onboardingRouter);
+app.use('/api', schedulerRouter);
 app.use('/', webhookRouter);
 
 // Global error handler

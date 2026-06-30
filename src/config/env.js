@@ -30,4 +30,5 @@ module.exports = {
   get ELEVENLABS_API_KEY() { return process.env.ELEVENLABS_API_KEY; },
   get ELEVENLABS_VOICE_ID() { return process.env.ELEVENLABS_VOICE_ID; },
   get ELEVENLABS_MODEL() { return process.env.ELEVENLABS_MODEL || 'eleven_v3'; },
+  get SCHEDULER_SECRET() { return process.env.SCHEDULER_SECRET; },
 };
