@@ -5,8 +5,8 @@ function getClient() {
   return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 }
 
-// claude-sonnet-4-20250514 foi descontinuado (404). Sucessor direto da mesma família.
-const MODEL = 'claude-sonnet-4-5';
+// claude-sonnet-4-20250514 foi descontinuado (404). Usando o modelo Sonnet mais recente.
+const MODEL = 'claude-sonnet-5';
 
 const SYSTEM_TEMPLATE = `PRIORIDADE MÁXIMA:
 Se alguma regra deste prompt estiver deixando a resposta artificial, ignore a regra.
